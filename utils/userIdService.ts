@@ -3,18 +3,18 @@ import "react-native-get-random-values";
 import { v4 as uuidv4 } from "uuid";
 
 const STORAGE_KEY = "permanent_user_id";
-const ID_PREFIX = "AI_jober:";
+const ID_PREFIX = "JobberFlow:";
 
 export const userIdService = {
   /**
-   * Generates a new User ID with the pattern AI_jober:<uuid>
+   * Generates a new User ID with the pattern JobberFlow:<uuid>
    */
   generateId: (): string => {
     return `${ID_PREFIX}${uuidv4()}`;
   },
 
   /**
-   * Validates if the ID matches the pattern AI_jober:<uuid>
+   * Validates if the ID matches the pattern JobberFlow:<uuid>
    */
   validateId: (id: string): boolean => {
     if (!id.startsWith(ID_PREFIX)) return false;

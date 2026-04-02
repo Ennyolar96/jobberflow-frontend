@@ -231,7 +231,7 @@ export default function InterviewScreen() {
       />
 
       <KeyboardAvoidingView
-        behavior="position"
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
         keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
       >
         <View style={[styles.inputPanel, isDarkMode && styles.darkInputPanel]}>
