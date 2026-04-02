@@ -1,3 +1,4 @@
+import { apiKeys, details, ready } from "@/assets/images/onboarding";
 import { Screen } from "@/constants/layout";
 import { useSessionStore } from "@/store/sessionStore";
 import { useRouter } from "expo-router";
@@ -14,7 +15,7 @@ import {
   View,
 } from "react-native";
 
-const { width, height } = Dimensions.get("window");
+const { width } = Dimensions.get("window");
 
 const SLIDES = [
   {
@@ -22,7 +23,7 @@ const SLIDES = [
     title: "Secure Your Experience",
     description:
       "To start using the AI assistant, please add your API keys in the Settings page. This ensures your data remains yours.",
-    image: require("@/assets/images/onboarding/api_keys.png"),
+    image: apiKeys,
     color: "#4F46E5",
   },
   {
@@ -30,7 +31,7 @@ const SLIDES = [
     title: "Build Your Profile",
     description:
       "Upload your CV, specify the job role, company, and job description. This helps the AI provide tailored interview prep and assistance.",
-    image: require("@/assets/images/onboarding/details.png"),
+    image: details,
     color: "#7C3AED",
   },
   {
@@ -38,7 +39,7 @@ const SLIDES = [
     title: "All Ready!",
     description:
       "You're all set to land your dream job. Step into the interview room with confidence or seek assistance whenever you need.",
-    image: require("@/assets/images/onboarding/ready.png"),
+    image: ready,
     color: "#06B6D4",
   },
 ];

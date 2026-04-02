@@ -6,15 +6,13 @@ import * as SplashScreen from "expo-splash-screen";
 import "react-native-reanimated";
 export { ErrorBoundary } from "expo-router";
 
+import { CustomAlert } from "@/components/CustomAlert";
 import { useEffect } from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { CustomAlert } from "@/components/CustomAlert";
 
 export const unstable_settings = {
   anchor: "(tabs)",
 };
-
-SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   try {
@@ -48,7 +46,8 @@ export default function RootLayout() {
     const userId = useSessionStore.getState().userId;
 
     const onConnect = () => {
-      console.log("WebSocket connected:", socket.id);
+      SplashScreen.preventAutoHideAsync();
+      // console.log("WebSocket connected:", socket.id);
       if (userId) {
         socket.emit("join-user", userId);
         console.log("Joined user room:", userId);
@@ -87,8 +86,8 @@ export default function RootLayout() {
   return <RootLayoutNav />;
 }
 
-import { usePathname, useRouter } from "expo-router";
 import { userIdService } from "@/utils/userIdService";
+import { usePathname, useRouter } from "expo-router";
 
 function RootLayoutNav() {
   const { userId, setSession, hasSeenOnboarding } = useSessionStore();
@@ -98,7 +97,11 @@ function RootLayoutNav() {
   useEffect(() => {
     const syncUserId = async () => {
       // Don't run this check on setup or onboarding pages to avoid redirect loops
-      if (pathname === "/userid-setup" || pathname === "/onboarding" || pathname === "/") {
+      if (
+        pathname === "/userid-setup" ||
+        pathname === "/onboarding" ||
+        pathname === "/"
+      ) {
         return;
       }
 
