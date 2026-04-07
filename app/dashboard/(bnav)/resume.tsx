@@ -1,3 +1,4 @@
+import { LoadingComponent } from "@/components/LoadingComponent";
 import { Screen } from "@/constants/layout";
 import { client } from "@/services";
 import { aiService } from "@/services/aiService";
@@ -30,7 +31,10 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  useWindowDimensions,
 } from "react-native";
+import RenderHtml from "react-native-render-html";
+import { WebView } from "react-native-webview";
 import TurndownService from "turndown";
 
 export enum Template {
@@ -53,6 +57,8 @@ export enum Template {
 
 export default function ResumeScreen() {
   const router = useRouter();
+  const { width } = useWindowDimensions();
+
   const { cvText, jobDescription, setSession, isDarkMode, userId, showAlert } =
     useSessionStore();
   const [localJobDesc, setLocalJobDesc] = useState(jobDescription || "");
@@ -63,6 +69,7 @@ export default function ResumeScreen() {
     Template.modern,
   );
   const [isPickerVisible, setIsPickerVisible] = useState(false);
+  const [showWebView, setShowWebView] = useState(false);
 
   const handleSaveAndReturn = () => {
     if (!cvText || !localJobDesc) {
@@ -254,20 +261,33 @@ export default function ResumeScreen() {
   const copyResume = async () => {
     if (!optimizedResume) return;
 
+    const plainText = optimizedResume
+      .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "") // Remove style tags and their content
+      .replace(/<[^>]+>/g, "") // Remove all other HTML tags
+      .replace(/&nbsp;/g, " ") // Replace non-breaking spaces
+      .replace(/\n\s*\n/g, "\n\n") // Normalize multiple newlines
+      .trim();
+
     try {
       const turndownService = new TurndownService();
-      const markdown = turndownService.turndown(optimizedResume);
+      const markdown = turndownService.turndown(plainText);
       await Clipboard.setStringAsync(markdown);
       showAlert("Resume converted to Markdown and copied", "success");
     } catch (error) {
       // Fallback to plain text if conversion fails
-      await Clipboard.setStringAsync(optimizedResume);
-      showAlert("Resume copied to clipboard", "success");
+      await Clipboard.setStringAsync(plainText);
+      showAlert("Resume plain text copied to clipboard", "success");
     }
   };
 
   return (
     <Screen edges={["top", "left", "right"]}>
+      <LoadingComponent
+        visible={isDownloading || isOptimizing}
+        transparent={true}
+        message={isDownloading ? "Downloading..." : "Optimizing..."}
+      />
+
       <ScrollView
         style={[styles.container, isDarkMode && styles.darkContainer]}
         contentContainerStyle={styles.content}
@@ -463,13 +483,54 @@ export default function ResumeScreen() {
                 AI Preview
               </Text>
             </View>
-            <Text style={[styles.resultText, isDarkMode && styles.darkSubtext]}>
-              {optimizedResume}
-            </Text>
+            <View
+              style={{
+                height: 450,
+                borderRadius: 8,
+                overflow: "hidden",
+                marginBottom: 16,
+              }}
+            >
+              {showWebView ? (
+                <WebView
+                  originWhitelist={["*"]}
+                  source={{ html: optimizedResume }}
+                  style={{ flex: 1 }}
+                  scalesPageToFit={true}
+                />
+              ) : (
+                <ScrollView style={{ flex: 1 }}>
+                  <RenderHtml
+                    source={{ html: optimizedResume }}
+                    contentWidth={width}
+                    tagsStyles={{
+                      body: {
+                        color: isDarkMode ? "#FFFFFF" : "#000000",
+                      },
+                    }}
+                  />
+                </ScrollView>
+              )}
+            </View>
             <View style={styles.resultActions}>
               <TouchableOpacity
                 style={styles.secondaryButton}
+                onPress={() => setShowWebView(!showWebView)}
+                activeOpacity={0.6}
+              >
+                <Text
+                  style={[
+                    styles.secondaryButtonText,
+                    isDarkMode && styles.darkSubtext,
+                  ]}
+                >
+                  {showWebView ? "Hide Preview" : "Preview Design"}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.secondaryButton}
                 onPress={copyResume}
+                activeOpacity={0.6}
               >
                 <Text
                   style={[
@@ -487,6 +548,7 @@ export default function ResumeScreen() {
                   isDownloading && styles.actionButtonDisabled,
                 ]}
                 disabled={isDownloading}
+                activeOpacity={0.6}
               >
                 <Text style={styles.primarySmallButtonText}>
                   {isDownloading ? "Downloading..." : "Download (PDF)"}

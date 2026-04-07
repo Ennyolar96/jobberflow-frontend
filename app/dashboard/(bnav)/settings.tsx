@@ -1,4 +1,5 @@
 import { settingsAction as sa } from "@/actions";
+import { LoadingComponent } from "@/components/LoadingComponent";
 import { PasswordPrompt } from "@/components/PasswordPrompt";
 import { Screen } from "@/constants/layout";
 import { useSessionStore } from "@/store/sessionStore";
@@ -152,6 +153,8 @@ export default function SettingsScreen() {
 
   return (
     <Screen edges={["top", "left", "right"]}>
+      <LoadingComponent visible={isPending} message="Processing..." />
+
       <ScrollView
         key={isDarkMode ? "dark" : "light"}
         style={[styles.container, isDarkMode && styles.darkContainer]}
