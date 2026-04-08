@@ -7,6 +7,7 @@ import "react-native-reanimated";
 export { ErrorBoundary } from "expo-router";
 
 import { CustomAlert } from "@/components/CustomAlert";
+import { NetworkStatus } from "@/components/NetworkStatus";
 import { useEffect } from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
@@ -130,6 +131,7 @@ function RootLayoutNav() {
   return (
     <SafeAreaProvider>
       <CustomAlert />
+      <NetworkStatus />
       <Slot />
     </SafeAreaProvider>
   );

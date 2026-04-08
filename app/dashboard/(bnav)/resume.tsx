@@ -19,6 +19,7 @@ import {
   Save,
   Send,
   Sparkles,
+  X,
 } from "lucide-react-native";
 import React, { useState } from "react";
 import {
@@ -34,6 +35,7 @@ import {
   useWindowDimensions,
 } from "react-native";
 import RenderHtml from "react-native-render-html";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { WebView } from "react-native-webview";
 import TurndownService from "turndown";
 
@@ -491,26 +493,15 @@ export default function ResumeScreen() {
                 marginBottom: 16,
               }}
             >
-              {showWebView ? (
-                <WebView
-                  originWhitelist={["*"]}
-                  source={{ html: optimizedResume }}
-                  style={{ flex: 1 }}
-                  scalesPageToFit={true}
-                />
-              ) : (
-                <ScrollView style={{ flex: 1 }}>
-                  <RenderHtml
-                    source={{ html: optimizedResume }}
-                    contentWidth={width}
-                    tagsStyles={{
-                      body: {
-                        color: isDarkMode ? "#FFFFFF" : "#000000",
-                      },
-                    }}
-                  />
-                </ScrollView>
-              )}
+              <RenderHtml
+                source={{ html: optimizedResume }}
+                contentWidth={width}
+                tagsStyles={{
+                  body: {
+                    color: isDarkMode ? "#FFFFFF" : "#000000",
+                  },
+                }}
+              />
             </View>
             <View style={styles.resultActions}>
               <TouchableOpacity
@@ -560,6 +551,61 @@ export default function ResumeScreen() {
 
         <View style={styles.spacer} />
       </ScrollView>
+
+      <Modal
+        visible={showWebView}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        statusBarTranslucent
+      >
+        <SafeAreaView
+          style={{
+            flex: 1,
+            backgroundColor: isDarkMode ? "#111827" : "#FFFFFF",
+          }}
+        >
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              alignItems: "center",
+              paddingHorizontal: 20,
+              paddingVertical: 16,
+              borderBottomWidth: 1,
+              borderBottomColor: isDarkMode ? "#1F2937" : "#E5E7EB",
+            }}
+          >
+            <Text
+              style={{
+                fontSize: 18,
+                fontWeight: "bold",
+                color: isDarkMode ? "#F9FAFB" : "#111827",
+              }}
+            >
+              Resume Preview
+            </Text>
+            <TouchableOpacity
+              onPress={() => setShowWebView(false)}
+              style={{
+                width: 36,
+                height: 36,
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: isDarkMode ? "#374151" : "#F3F4F6",
+                borderRadius: 18,
+              }}
+            >
+              <X size={20} color={isDarkMode ? "#D1D5DB" : "#4B5563"} />
+            </TouchableOpacity>
+          </View>
+          <WebView
+            originWhitelist={["*"]}
+            source={{ html: optimizedResume || "" }}
+            style={{ flex: 1, backgroundColor: "transparent" }}
+            scalesPageToFit={true}
+          />
+        </SafeAreaView>
+      </Modal>
     </Screen>
   );
 }

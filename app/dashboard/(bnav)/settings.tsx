@@ -4,9 +4,11 @@ import { PasswordPrompt } from "@/components/PasswordPrompt";
 import { Screen } from "@/constants/layout";
 import { useSessionStore } from "@/store/sessionStore";
 import { AxiosError } from "axios";
+import * as Clipboard from "expo-clipboard";
 import { useFocusEffect, useRouter } from "expo-router";
 import {
   Briefcase,
+  Copy,
   Eye,
   Key,
   Moon,
@@ -153,7 +155,11 @@ export default function SettingsScreen() {
 
   return (
     <Screen edges={["top", "left", "right"]}>
-      <LoadingComponent visible={isPending} message="Processing..." />
+      <LoadingComponent
+        visible={isPending}
+        message="Processing..."
+        transparent={true}
+      />
 
       <ScrollView
         key={isDarkMode ? "dark" : "light"}
@@ -170,6 +176,56 @@ export default function SettingsScreen() {
           <Text style={[styles.userEmail, isDarkMode && styles.darkSubtext]}>
             Session Configuration
           </Text>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>User Identity</Text>
+          <View style={[styles.card, isDarkMode && styles.darkCard]}>
+            <View style={styles.inputGroup}>
+              <View style={styles.iconWrapper}>
+                <User size={18} color={isDarkMode ? "#9CA3AF" : "#6B7280"} />
+              </View>
+              <View style={styles.inputWrapper}>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <View style={{ flex: 1 }}>
+                    <Text
+                      style={[
+                        styles.inputLabel,
+                        isDarkMode && styles.darkSubtext,
+                      ]}
+                    >
+                      User ID
+                    </Text>
+                    <TextInput
+                      style={[styles.input, isDarkMode && styles.darkText]}
+                      value={userId || ""}
+                      editable={false}
+                    />
+                  </View>
+                  <TouchableOpacity
+                    style={{ padding: 8 }}
+                    onPress={async () => {
+                      if (userId) {
+                        await Clipboard.setStringAsync(userId);
+                        showAlert("User ID copied to clipboard", "success");
+                      }
+                    }}
+                  >
+                    <Copy
+                      size={20}
+                      color={isDarkMode ? "#9CA3AF" : "#6B7280"}
+                    />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          </View>
         </View>
 
         <View style={styles.section}>
@@ -487,7 +543,7 @@ export default function SettingsScreen() {
 
         <View style={styles.footer}>
           <Text style={[styles.version, isDarkMode && styles.darkSubtext]}>
-            Interview Assistant AI v1.0.0
+            Interview Assistant AI v1.0.5
           </Text>
         </View>
 
