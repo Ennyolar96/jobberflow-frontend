@@ -1,5 +1,6 @@
 import { useSessionStore } from "@/store/sessionStore";
 import { AudioModule, RecordingPresets } from "expo-audio";
+import * as Speech from "expo-speech";
 import { client } from "./axiosService";
 
 export const speechService = {
@@ -10,9 +11,13 @@ export const speechService = {
         throw new Error("Microphone permission not granted");
       }
 
+      const { isStealthMode } = useSessionStore.getState();
+
       await AudioModule.setAudioModeAsync({
         allowsRecording: true,
         playsInSilentMode: true,
+        // @ts-ignore - Support earpiece routing if available in current version
+        shouldRouteThroughEarpieceAndroid: isStealthMode,
       });
 
       const recorder = new AudioModule.AudioRecorder(
@@ -25,6 +30,27 @@ export const speechService = {
     } catch (error) {
       console.error("Failed to start recording:", error);
       throw error;
+    }
+  },
+
+  speak: async (text: string) => {
+    try {
+      const { isStealthMode } = useSessionStore.getState();
+
+      // Ensure audio mode is set correctly before speaking
+      await AudioModule.setAudioModeAsync({
+        allowsRecording: false,
+        playsInSilentMode: true,
+        // @ts-ignore
+        shouldRouteThroughEarpieceAndroid: isStealthMode,
+      });
+
+      Speech.speak(text, {
+        rate: 0.9,
+        pitch: 1.0,
+      });
+    } catch (error) {
+      console.error("Speech error:", error);
     }
   },
 

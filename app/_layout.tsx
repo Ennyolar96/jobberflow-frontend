@@ -4,6 +4,7 @@ import { useFonts } from "expo-font";
 import { Slot } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import "react-native-reanimated";
+import { useKeepAwake } from "expo-keep-awake";
 export { ErrorBoundary } from "expo-router";
 
 import { CustomAlert } from "@/components/CustomAlert";
@@ -16,6 +17,7 @@ export const unstable_settings = {
 };
 
 export default function RootLayout() {
+  useKeepAwake();
   try {
     SplashScreen.setOptions?.({
       duration: 1000,

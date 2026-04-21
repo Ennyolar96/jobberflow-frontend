@@ -1,13 +1,14 @@
 import { ChatBubble } from "@/components/ChatBubble";
 import { Screen } from "@/constants/layout";
-import { client } from "@/services";
+import { client, speechService } from "@/services";
 import { aiService } from "@/services/aiService";
 import { useSessionStore } from "@/store/sessionStore";
 import { AxiosError } from "axios";
-import { useFocusEffect, useRouter } from "expo-router";
-import { Briefcase, Send } from "lucide-react-native";
-import React, { useCallback, useRef, useState } from "react";
+import { useRouter } from "expo-router";
+import { Briefcase, Send, Trash2, Volume2, VolumeX } from "lucide-react-native";
+import React, { useEffect, useRef, useState } from "react";
 import {
+  Alert,
   FlatList,
   KeyboardAvoidingView,
   Platform,
@@ -40,6 +41,7 @@ export default function InterviewScreen() {
 
   const [inputText, setInputText] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isAutoRead, setIsAutoRead] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "1",
@@ -52,32 +54,83 @@ export default function InterviewScreen() {
     },
   ]);
 
-  // delete all messages when screen loses focus
-  const clearHistory = useCallback(() => {
-    if (messages.length <= 1) return;
-    client.delete(`/clear-history/${userId}`);
-    setInputText("");
-    setMessages([
-      {
-        id: "1",
-        text: `Hello! I'm your AI Interview Preparation Assistant. I'll be asking you questions to help you prepare for your interview for the ${role || "specified"} role at ${company || "your target company"}.`,
-        sender: "ai",
-        timestamp: new Date().toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-      },
-    ]);
-  }, [userId, role, company]);
+  const getInterviews = async () => {
+    try {
+      const response = await client.get(`/interviews?userId=${userId}`);
 
-  useFocusEffect(
-    useCallback(() => {
-      return () => {
-        // When screen loses focus, clear history
-        clearHistory();
-      };
-    }, [clearHistory]),
-  );
+      if (response.data.response.session.length > 0) {
+        const sessions = response.data.response.session;
+
+        const mappedMessages: Message[] = sessions.flatMap((s: any) => {
+          try {
+            const turns =
+              typeof s.turns === "string" ? JSON.parse(s.turns) : s.turns;
+            return turns.map((t: any, index: number) => ({
+              id: `${s.id}-${index}`,
+              text: t.text,
+              sender: t.speaker === "Candidate" ? "user" : "ai",
+              timestamp: new Date(t.timestamp).toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              }),
+            }));
+          } catch (e) {
+            console.error("Failed to parse turns for session", s.id);
+            return [];
+          }
+        });
+
+        if (mappedMessages.length > 0) {
+          setMessages(mappedMessages);
+        }
+      }
+    } catch (error) {
+      showAlert("Failed to get interviews", "error");
+    }
+  };
+
+  useEffect(() => {
+    getInterviews();
+  }, []);
+
+  // Handle clearing chat history with confirmation
+  const handleClearHistory = () => {
+    if (messages.length <= 1) return;
+
+    Alert.alert(
+      "Clear Chat History",
+      "Are you sure you want to delete all messages? This action cannot be undone.",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Clear",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await client.delete(`/clear-history/${userId}`);
+              setInputText("");
+              setMessages([
+                {
+                  id: "1",
+                  text: `Hello! I'm your AI Interview Preparation Assistant. I'll be asking you questions to help you prepare for your interview for the ${role || "specified"} role at ${company || "your target company"}.`,
+                  sender: "ai",
+                  timestamp: new Date().toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  }),
+                },
+              ]);
+            } catch (error) {
+              showAlert("Failed to clear history", "error");
+            }
+          },
+        },
+      ],
+    );
+  };
 
   const flatListRef = useRef<FlatList>(null);
 
@@ -149,6 +202,10 @@ export default function InterviewScreen() {
       };
 
       setMessages((prev) => [...prev, aiMsg]);
+
+      if (isAutoRead) {
+        speechService.speak(displayText);
+      }
     } catch (error) {
       if (error instanceof AxiosError) {
         const theError = error.response?.data;
@@ -201,16 +258,35 @@ export default function InterviewScreen() {
             {role || "Developer"} @ {company || "Tech Corp"}
           </Text>
         </View>
-        <TouchableOpacity
-          style={styles.setupButton}
-          onPress={() => router.push("/dashboard/resume")}
-        >
-          <Text
-            style={[styles.setupButtonText, isDarkMode && styles.darkSubtext]}
+        <View style={styles.headerActions}>
+          <TouchableOpacity
+            style={styles.headerButton}
+            onPress={() => setIsAutoRead(!isAutoRead)}
           >
-            Setup Session
-          </Text>
-        </TouchableOpacity>
+            {isAutoRead ? (
+              <Volume2 size={20} color={isDarkMode ? "#818CF8" : "#4F46E5"} />
+            ) : (
+              <VolumeX size={20} color={isDarkMode ? "#9CA3AF" : "#6B7280"} />
+            )}
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.clearButton}
+            onPress={handleClearHistory}
+          >
+            <Trash2 size={16} color="#EF4444" />
+            <Text style={styles.clearButtonText}>Clear Chat</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.setupButton}
+            onPress={() => router.push("/dashboard/resume")}
+          >
+            <Text
+              style={[styles.setupButtonText, isDarkMode && styles.darkSubtext]}
+            >
+              Setup Session
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <FlatList
@@ -314,6 +390,28 @@ const styles = StyleSheet.create({
   },
   darkSubtext: {
     color: "#9CA3AF",
+  },
+  headerActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  headerButton: {
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: "transparent",
+  },
+  clearButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+  },
+  clearButtonText: {
+    fontSize: 12,
+    color: "#EF4444",
+    fontWeight: "500",
   },
   listContent: {
     padding: 16,

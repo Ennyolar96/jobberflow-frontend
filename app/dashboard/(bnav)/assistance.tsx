@@ -2,13 +2,20 @@ import { AudioIndicator } from "@/components/AudioIndicator";
 import { ChatBubble } from "@/components/ChatBubble";
 import { Screen } from "@/constants/layout";
 import { InterviewResponse } from "@/interface";
-import { client, speechService } from "@/services";
+import { speechService } from "@/services";
 import socket from "@/services/websocket";
 import { useSessionStore } from "@/store/sessionStore";
 import { AxiosError } from "axios";
-import { useFocusEffect, useRouter } from "expo-router";
-import { Briefcase, Mic, MicOff, Zap } from "lucide-react-native";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useRouter } from "expo-router";
+import {
+  Briefcase,
+  Mic,
+  MicOff,
+  Volume2,
+  VolumeX,
+  Zap,
+} from "lucide-react-native";
+import React, { useEffect, useRef, useState } from "react";
 import {
   FlatList,
   StyleSheet,
@@ -26,9 +33,10 @@ interface Message {
 
 export default function InterviewScreen() {
   const router = useRouter();
-  const { role, company, isDarkMode, showAlert, userId } = useSessionStore();
+  const { role, company, isDarkMode, showAlert } = useSessionStore();
   const [isListening, setIsListening] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isAutoRead, setIsAutoRead] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "1",
@@ -41,31 +49,31 @@ export default function InterviewScreen() {
     },
   ]);
 
-  // delete all messages when screen loses focus
-  const clearHistory = useCallback(() => {
-    if (messages.length <= 1) return;
-    client.delete(`/clear-history/${userId}`);
-    setMessages([
-      {
-        id: "1",
-        text: `Hello! I'm your AI Interview Assistant. I'll be answering your questions to help you land your dream job at ${company || "your target company"}.`,
-        sender: "ai",
-        timestamp: new Date().toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-      },
-    ]);
-  }, [userId, role, company]);
+  // // delete all messages when screen loses focus
+  // const clearHistory = useCallback(() => {
+  //   if (messages.length <= 1) return;
+  //   client.delete(`/clear-history/${userId}`);
+  //   setMessages([
+  //     {
+  //       id: "1",
+  //       text: `Hello! I'm your AI Interview Assistant. I'll be answering your questions to help you land your dream job at ${company || "your target company"}.`,
+  //       sender: "ai",
+  //       timestamp: new Date().toLocaleTimeString([], {
+  //         hour: "2-digit",
+  //         minute: "2-digit",
+  //       }),
+  //     },
+  //   ]);
+  // }, [userId, role, company]);
 
-  useFocusEffect(
-    useCallback(() => {
-      return () => {
-        // When screen loses focus, clear history
-        clearHistory();
-      };
-    }, [clearHistory]),
-  );
+  // useFocusEffect(
+  //   useCallback(() => {
+  //     return () => {
+  //       // When screen loses focus, clear history
+  //       clearHistory();
+  //     };
+  //   }, [clearHistory]),
+  // );
 
   const [recording, setRecording] = useState<any>(null);
 
@@ -97,6 +105,10 @@ export default function InterviewScreen() {
 
       setMessages((prev) => [...prev, aiMsg]);
       setIsProcessing(false);
+
+      if (isAutoRead) {
+        speechService.speak(data.text || "");
+      }
     };
 
     socket.on("assistance-progress", handleReceiveMessage);
@@ -178,16 +190,28 @@ export default function InterviewScreen() {
             {role || "Developer"} @ {company || "Tech Corp"}
           </Text>
         </View>
-        <TouchableOpacity
-          style={styles.setupButton}
-          onPress={() => router.push("/dashboard/resume")}
-        >
-          <Text
-            style={[styles.setupButtonText, isDarkMode && styles.darkSubtext]}
+        <View style={styles.headerActions}>
+          <TouchableOpacity
+            style={styles.headerButton}
+            onPress={() => setIsAutoRead(!isAutoRead)}
           >
-            Setup Session
-          </Text>
-        </TouchableOpacity>
+            {isAutoRead ? (
+              <Volume2 size={20} color={isDarkMode ? "#818CF8" : "#4F46E5"} />
+            ) : (
+              <VolumeX size={20} color={isDarkMode ? "#9CA3AF" : "#6B7280"} />
+            )}
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.setupButton}
+            onPress={() => router.push("/dashboard/resume")}
+          >
+            <Text
+              style={[styles.setupButtonText, isDarkMode && styles.darkSubtext]}
+            >
+              Setup Session
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <FlatList
@@ -301,6 +325,16 @@ const styles = StyleSheet.create({
   },
   darkSubtext: {
     color: "#9CA3AF",
+  },
+  headerActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  headerButton: {
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: "transparent",
   },
   listContent: {
     padding: 16,

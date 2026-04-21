@@ -543,7 +543,7 @@ export default function SettingsScreen() {
 
         <View style={styles.footer}>
           <Text style={[styles.version, isDarkMode && styles.darkSubtext]}>
-            Interview Assistant AI v1.0.5
+            Interview Assistant AI v1.0.10
           </Text>
         </View>
 
