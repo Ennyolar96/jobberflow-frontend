@@ -2,7 +2,7 @@ import { AudioIndicator } from "@/components/AudioIndicator";
 import { ChatBubble } from "@/components/ChatBubble";
 import { Screen } from "@/constants/layout";
 import { InterviewResponse } from "@/interface";
-import { speechService } from "@/services";
+import { aiService, speechService } from "@/services";
 import socket from "@/services/websocket";
 import { useSessionStore } from "@/store/sessionStore";
 import { AxiosError } from "axios";
@@ -33,7 +33,16 @@ interface Message {
 
 export default function InterviewScreen() {
   const router = useRouter();
-  const { role, company, isDarkMode, showAlert } = useSessionStore();
+  const {
+    role,
+    company,
+    isDarkMode,
+    showAlert,
+    cvText,
+    jobDescription,
+    tone,
+    userId,
+  } = useSessionStore();
   const [isListening, setIsListening] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isAutoRead, setIsAutoRead] = useState(false);
@@ -179,6 +188,73 @@ export default function InterviewScreen() {
     }
   };
 
+  const handleResend = async (question: string) => {
+    try {
+      setIsProcessing(true);
+      const response = await aiService.resendResponseText(question, {
+        cvText,
+        jobDescription,
+        role,
+        company,
+        tone,
+        userId,
+      });
+      console.log({ response });
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now().toString(),
+          text: response,
+          sender: "ai",
+          timestamp: new Date().toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+        },
+      ]);
+    } catch (err) {
+      if (err instanceof AxiosError) {
+        const theError = err.response?.data;
+
+        if (theError && typeof theError === "object") {
+          // Multiple errors
+          if ("errors" in theError && Array.isArray(theError.errors)) {
+            theError.errors.forEach((e: any) => {
+              const msg =
+                typeof e === "string"
+                  ? e
+                  : e.message ||
+                    (e.messages && e.messages[0]) ||
+                    "An error occurred";
+              showAlert(msg, "error");
+            });
+            return;
+          }
+
+          // Single message
+          const errorMessage =
+            theError.message?.message ||
+            theError.message ||
+            theError.error ||
+            "Something went wrong";
+
+          if (err.code === "ECONNABORTED") {
+            showAlert("Request timed out. Please try again.", "error");
+          } else {
+            showAlert(
+              typeof errorMessage === "string"
+                ? errorMessage
+                : JSON.stringify(errorMessage),
+              "error",
+            );
+          }
+        }
+      }
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   return (
     <Screen edges={["top", "left", "right"]}>
       <View
@@ -227,6 +303,7 @@ export default function InterviewScreen() {
             message={item.text}
             sender={item.sender}
             time={item.timestamp}
+            onResend={(text) => handleResend(text)}
           />
         )}
       />

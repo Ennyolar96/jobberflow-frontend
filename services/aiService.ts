@@ -46,4 +46,26 @@ export const aiService = {
       throw err;
     }
   },
+
+  resendResponseText: async (
+    text: string,
+    context: {
+      cvText: string | null;
+      jobDescription: string | null;
+      role: string | null;
+      company: string | null;
+      tone: string;
+      userId: string | null;
+    },
+  ): Promise<any> => {
+    try {
+      const response = await client.post("/assistance/resend", {
+        transcript: text,
+        ...context,
+      });
+      return response.data;
+    } catch (err) {
+      throw err;
+    }
+  },
 };
