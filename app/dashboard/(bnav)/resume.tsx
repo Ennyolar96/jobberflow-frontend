@@ -67,6 +67,7 @@ export default function ResumeScreen() {
   const [isOptimizing, setIsOptimizing] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [optimizedResume, setOptimizedResume] = useState<string | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<Template>(
     Template.modern,
   );
@@ -258,6 +259,13 @@ export default function ResumeScreen() {
     } finally {
       setIsDownloading(false);
     }
+  };
+
+  const toggleEdit = () => setIsEditing(!isEditing);
+
+  const saveEdit = () => {
+    setIsEditing(false);
+    showAlert("Resume updated successfully.", "success");
   };
 
   const copyResume = async () => {
@@ -493,58 +501,103 @@ export default function ResumeScreen() {
                 marginBottom: 16,
               }}
             >
-              <RenderHtml
-                source={{ html: optimizedResume }}
-                contentWidth={width}
-                tagsStyles={{
-                  body: {
-                    color: isDarkMode ? "#FFFFFF" : "#000000",
-                  },
-                }}
-              />
+              {isEditing ? (
+                <TextInput
+                  style={[
+                    styles.textArea,
+                    isDarkMode && styles.darkInputArea,
+                    isDarkMode && styles.darkText,
+                    { flex: 1, textAlignVertical: "top" },
+                  ]}
+                  multiline
+                  value={optimizedResume}
+                  onChangeText={setOptimizedResume}
+                  placeholder="Edit your resume HTML here..."
+                  placeholderTextColor={isDarkMode ? "#4B5563" : "#9CA3AF"}
+                />
+              ) : (
+                <RenderHtml
+                  source={{ html: optimizedResume }}
+                  contentWidth={width}
+                  tagsStyles={{
+                    body: {
+                      color: isDarkMode ? "#FFFFFF" : "#000000",
+                    },
+                  }}
+                />
+              )}
             </View>
             <View style={styles.resultActions}>
               <TouchableOpacity
                 style={styles.secondaryButton}
-                onPress={() => setShowWebView(!showWebView)}
+                onPress={toggleEdit}
                 activeOpacity={0.6}
               >
                 <Text
                   style={[
                     styles.secondaryButtonText,
                     isDarkMode && styles.darkSubtext,
+                    isEditing && { color: "#EF4444" },
                   ]}
                 >
-                  {showWebView ? "Hide Preview" : "Preview Design"}
+                  {isEditing ? "Cancel" : "Edit Content"}
                 </Text>
               </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.secondaryButton}
-                onPress={copyResume}
-                activeOpacity={0.6}
-              >
-                <Text
-                  style={[
-                    styles.secondaryButtonText,
-                    isDarkMode && styles.darkSubtext,
-                  ]}
+              {isEditing ? (
+                <TouchableOpacity
+                  onPress={saveEdit}
+                  style={styles.primarySmallButton}
+                  activeOpacity={0.6}
                 >
-                  Copy Text
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={downloadPDF}
-                style={[
-                  styles.primarySmallButton,
-                  isDownloading && styles.actionButtonDisabled,
-                ]}
-                disabled={isDownloading}
-                activeOpacity={0.6}
-              >
-                <Text style={styles.primarySmallButtonText}>
-                  {isDownloading ? "Downloading..." : "Download (PDF)"}
-                </Text>
-              </TouchableOpacity>
+                  <Text style={styles.primarySmallButtonText}>
+                    Save Changes
+                  </Text>
+                </TouchableOpacity>
+              ) : (
+                <>
+                  <TouchableOpacity
+                    style={styles.secondaryButton}
+                    onPress={() => setShowWebView(!showWebView)}
+                    activeOpacity={0.6}
+                  >
+                    <Text
+                      style={[
+                        styles.secondaryButtonText,
+                        isDarkMode && styles.darkSubtext,
+                      ]}
+                    >
+                      {showWebView ? "Hide Preview" : "Preview Design"}
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.secondaryButton}
+                    onPress={copyResume}
+                    activeOpacity={0.6}
+                  >
+                    <Text
+                      style={[
+                        styles.secondaryButtonText,
+                        isDarkMode && styles.darkSubtext,
+                      ]}
+                    >
+                      Copy Text
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={downloadPDF}
+                    style={[
+                      styles.primarySmallButton,
+                      isDownloading && styles.actionButtonDisabled,
+                    ]}
+                    disabled={isDownloading}
+                    activeOpacity={0.6}
+                  >
+                    <Text style={styles.primarySmallButtonText}>
+                      {isDownloading ? "Downloading..." : "Download (PDF)"}
+                    </Text>
+                  </TouchableOpacity>
+                </>
+              )}
             </View>
           </View>
         )}
