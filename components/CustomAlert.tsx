@@ -1,20 +1,13 @@
+import { AlertCircle, CheckCircle2, Info, X } from "lucide-react-native";
 import React, { useEffect } from "react";
 import {
+  Dimensions,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
-  Dimensions,
 } from "react-native";
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withSpring,
-  withTiming,
-  FadeInUp,
-  FadeOutUp,
-} from "react-native-reanimated";
-import { CheckCircle2, AlertCircle, Info, X } from "lucide-react-native";
+import Animated, { FadeInUp, FadeOutUp } from "react-native-reanimated";
 import { useSessionStore } from "../store/sessionStore";
 
 const { width } = Dimensions.get("window");

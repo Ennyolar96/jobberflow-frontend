@@ -1,8 +1,11 @@
 import { LoadingComponent } from "@/components/LoadingComponent";
+import { ResumeResult } from "@/components/resumeResult";
+import { RichEditors } from "@/components/richeditor";
 import { Screen } from "@/constants/layout";
 import { client } from "@/services";
 import { aiService } from "@/services/aiService";
 import { useSessionStore } from "@/store/sessionStore";
+import { styles } from "@/style/resume";
 import { AxiosError } from "axios";
 import { Buffer } from "buffer";
 import * as Clipboard from "expo-clipboard";
@@ -11,7 +14,7 @@ import * as FileSystem from "expo-file-system/legacy";
 import { useRouter } from "expo-router";
 import * as Sharing from "expo-sharing";
 import {
-  CheckCircle2,
+  Check,
   ChevronDown,
   FileText,
   FileUp,
@@ -27,14 +30,13 @@ import {
   Modal,
   Pressable,
   ScrollView,
-  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  View,
   useWindowDimensions,
+  View,
 } from "react-native";
-import RenderHtml from "react-native-render-html";
+
 import { SafeAreaView } from "react-native-safe-area-context";
 import { WebView } from "react-native-webview";
 import TurndownService from "turndown";
@@ -263,11 +265,6 @@ export default function ResumeScreen() {
 
   const toggleEdit = () => setIsEditing(!isEditing);
 
-  const saveEdit = () => {
-    setIsEditing(false);
-    showAlert("Resume updated successfully.", "success");
-  };
-
   const copyResume = async () => {
     if (!optimizedResume) return;
 
@@ -301,6 +298,7 @@ export default function ResumeScreen() {
       <ScrollView
         style={[styles.container, isDarkMode && styles.darkContainer]}
         contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
           <Sparkles size={24} color={isDarkMode ? "#818CF8" : "#6366F1"} />
@@ -479,134 +477,23 @@ export default function ResumeScreen() {
         </View>
 
         {optimizedResume && (
-          <View
-            style={[styles.resultCard, isDarkMode && styles.darkResultCard]}
-          >
-            <View style={styles.resultHeader}>
-              <CheckCircle2 size={20} color="#10B981" />
-              <Text
-                style={[
-                  styles.resultTitle,
-                  isDarkMode && styles.darkSuccessText,
-                ]}
-              >
-                AI Preview
-              </Text>
-            </View>
-            <View
-              style={{
-                height: 450,
-                borderRadius: 8,
-                overflow: "hidden",
-                marginBottom: 16,
-              }}
-            >
-              {isEditing ? (
-                <TextInput
-                  style={[
-                    styles.textArea,
-                    isDarkMode && styles.darkInputArea,
-                    isDarkMode && styles.darkText,
-                    { flex: 1, textAlignVertical: "top" },
-                  ]}
-                  multiline
-                  value={optimizedResume}
-                  onChangeText={setOptimizedResume}
-                  placeholder="Edit your resume HTML here..."
-                  placeholderTextColor={isDarkMode ? "#4B5563" : "#9CA3AF"}
-                />
-              ) : (
-                <RenderHtml
-                  source={{ html: optimizedResume }}
-                  contentWidth={width}
-                  tagsStyles={{
-                    body: {
-                      color: isDarkMode ? "#FFFFFF" : "#000000",
-                    },
-                  }}
-                />
-              )}
-            </View>
-            <View style={styles.resultActions}>
-              <TouchableOpacity
-                style={styles.secondaryButton}
-                onPress={toggleEdit}
-                activeOpacity={0.6}
-              >
-                <Text
-                  style={[
-                    styles.secondaryButtonText,
-                    isDarkMode && styles.darkSubtext,
-                    isEditing && { color: "#EF4444" },
-                  ]}
-                >
-                  {isEditing ? "Cancel" : "Edit Content"}
-                </Text>
-              </TouchableOpacity>
-              {isEditing ? (
-                <TouchableOpacity
-                  onPress={saveEdit}
-                  style={styles.primarySmallButton}
-                  activeOpacity={0.6}
-                >
-                  <Text style={styles.primarySmallButtonText}>
-                    Save Changes
-                  </Text>
-                </TouchableOpacity>
-              ) : (
-                <>
-                  <TouchableOpacity
-                    style={styles.secondaryButton}
-                    onPress={() => setShowWebView(!showWebView)}
-                    activeOpacity={0.6}
-                  >
-                    <Text
-                      style={[
-                        styles.secondaryButtonText,
-                        isDarkMode && styles.darkSubtext,
-                      ]}
-                    >
-                      {showWebView ? "Hide Preview" : "Preview Design"}
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.secondaryButton}
-                    onPress={copyResume}
-                    activeOpacity={0.6}
-                  >
-                    <Text
-                      style={[
-                        styles.secondaryButtonText,
-                        isDarkMode && styles.darkSubtext,
-                      ]}
-                    >
-                      Copy Text
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={downloadPDF}
-                    style={[
-                      styles.primarySmallButton,
-                      isDownloading && styles.actionButtonDisabled,
-                    ]}
-                    disabled={isDownloading}
-                    activeOpacity={0.6}
-                  >
-                    <Text style={styles.primarySmallButtonText}>
-                      {isDownloading ? "Downloading..." : "Download (PDF)"}
-                    </Text>
-                  </TouchableOpacity>
-                </>
-              )}
-            </View>
-          </View>
+          <ResumeResult
+            optimizedResume={optimizedResume}
+            isDownloading={isDownloading}
+            downloadPDF={downloadPDF}
+            toggleEdit={toggleEdit}
+            copyResume={copyResume}
+            setShowWebView={setShowWebView}
+            showWebView={showWebView}
+            isDarkMode={isDarkMode}
+          />
         )}
 
         <View style={styles.spacer} />
       </ScrollView>
 
       <Modal
-        visible={showWebView}
+        visible={isEditing || showWebView}
         animationType="slide"
         presentationStyle="pageSheet"
         statusBarTranslucent
@@ -635,10 +522,12 @@ export default function ResumeScreen() {
                 color: isDarkMode ? "#F9FAFB" : "#111827",
               }}
             >
-              Resume Preview
+              {isEditing ? "Edit" : "Preview"} Your Resume
             </Text>
             <TouchableOpacity
-              onPress={() => setShowWebView(false)}
+              onPress={() =>
+                isEditing ? setIsEditing(false) : setShowWebView(false)
+              }
               style={{
                 width: 36,
                 height: 36,
@@ -648,292 +537,30 @@ export default function ResumeScreen() {
                 borderRadius: 18,
               }}
             >
-              <X size={20} color={isDarkMode ? "#D1D5DB" : "#4B5563"} />
+              {isEditing ? (
+                <Check size={20} color={isDarkMode ? "#D1D5DB" : "#4B5563"} />
+              ) : (
+                <X size={20} color={isDarkMode ? "#D1D5DB" : "#4B5563"} />
+              )}
             </TouchableOpacity>
           </View>
-          <WebView
-            originWhitelist={["*"]}
-            source={{ html: optimizedResume || "" }}
-            style={{ flex: 1, backgroundColor: "transparent" }}
-            scalesPageToFit={true}
-          />
+
+          {isEditing ? (
+            <RichEditors
+              setValue={setOptimizedResume}
+              value={optimizedResume}
+              isDarkMode={isDarkMode}
+            />
+          ) : (
+            <WebView
+              originWhitelist={["*"]}
+              source={{ html: optimizedResume || "" }}
+              style={{ flex: 1, backgroundColor: "transparent" }}
+              scalesPageToFit={true}
+            />
+          )}
         </SafeAreaView>
       </Modal>
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#F9FAFB",
-  },
-  darkContainer: {
-    backgroundColor: "#030712",
-  },
-  content: {
-    padding: 20,
-  },
-  header: {
-    alignItems: "center",
-    marginBottom: 24,
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: "bold",
-    color: "#111827",
-    marginTop: 10,
-  },
-  darkText: {
-    color: "#F9FAFB",
-  },
-  subtitle: {
-    fontSize: 14,
-    color: "#6B7280",
-    textAlign: "center",
-    marginTop: 8,
-    paddingHorizontal: 10,
-  },
-  darkSubtext: {
-    color: "#9CA3AF",
-  },
-  card: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  darkCard: {
-    backgroundColor: "#111827",
-    elevation: 0,
-    borderWidth: 1,
-    borderColor: "#1F2937",
-  },
-  sectionHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    marginBottom: 12,
-  },
-  sectionTitle: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: "#374151",
-  },
-  uploadBox: {
-    height: 120,
-    borderWidth: 2,
-    borderColor: "#E5E7EB",
-    borderStyle: "dashed",
-    borderRadius: 12,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#F3F4F6",
-  },
-  darkInputArea: {
-    backgroundColor: "#1F2937",
-    borderColor: "#374151",
-  },
-  uploadBoxSuccess: {
-    borderColor: "#10B981",
-    backgroundColor: "#ECFDF5",
-  },
-  uploadText: {
-    marginTop: 8,
-    fontSize: 14,
-    color: "#6B7280",
-    textAlign: "center",
-    paddingHorizontal: 10,
-  },
-  uploadTextSuccess: {
-    color: "#10B981",
-    fontWeight: "500",
-  },
-  textArea: {
-    backgroundColor: "#F3F4F6",
-    borderRadius: 12,
-    padding: 12,
-    fontSize: 14,
-    color: "#1F2937",
-    minHeight: 120,
-  },
-  buttonRow: {
-    flexDirection: "row",
-    gap: 12,
-    marginTop: 8,
-  },
-  primaryActionButton: {
-    flex: 1.2,
-    backgroundColor: "#4F46E5",
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 14,
-    borderRadius: 12,
-    gap: 10,
-    elevation: 4,
-    shadowColor: "#4F46E5",
-    shadowOpacity: 0.3,
-    shadowOffset: { width: 0, height: 4 },
-    shadowRadius: 6,
-  },
-  primaryActionButtonText: {
-    color: "#FFFFFF",
-    fontSize: 15,
-    fontWeight: "600",
-  },
-  secondaryActionButton: {
-    flex: 1,
-    backgroundColor: "#EEF2FF",
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 14,
-    borderRadius: 12,
-    gap: 10,
-    borderWidth: 1,
-    borderColor: "#C7D2FE",
-  },
-  secondaryActionButtonText: {
-    color: "#4F46E5",
-    fontSize: 15,
-    fontWeight: "600",
-  },
-  actionButtonDisabled: {
-    opacity: 0.7,
-    backgroundColor: "#9CA3AF",
-  },
-  resultCard: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 16,
-    padding: 16,
-    marginTop: 24,
-    borderWidth: 1,
-    borderColor: "#10B981",
-  },
-  darkResultCard: {
-    backgroundColor: "#064E3B20",
-    borderColor: "#065F46",
-  },
-  resultHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    marginBottom: 12,
-  },
-  resultTitle: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#065F46",
-  },
-  darkSuccessText: {
-    color: "#10B981",
-  },
-  resultText: {
-    fontSize: 14,
-    color: "#4B5563",
-    lineHeight: 20,
-    marginBottom: 16,
-  },
-  resultActions: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
-    gap: 12,
-  },
-  secondaryButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-  },
-  secondaryButtonText: {
-    color: "#4B5563",
-    fontSize: 14,
-    fontWeight: "500",
-  },
-  primarySmallButton: {
-    backgroundColor: "#10B981",
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-  },
-  primarySmallButtonText: {
-    color: "#FFFFFF",
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  spacer: {
-    height: 40,
-  },
-  pickerButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: "#F3F4F6",
-    borderRadius: 12,
-    padding: 14,
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-  },
-  pickerButtonText: {
-    fontSize: 15,
-    color: "#1F2937",
-    fontWeight: "500",
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    justifyContent: "flex-end",
-  },
-  modalContent: {
-    backgroundColor: "#FFFFFF",
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    paddingBottom: 40,
-    maxHeight: "70%",
-  },
-  darkModalContent: {
-    backgroundColor: "#111827",
-  },
-  modalHeader: {
-    padding: 20,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    borderBottomWidth: 1,
-    borderBottomColor: "#F3F4F6",
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#111827",
-  },
-  doneButton: {
-    fontSize: 16,
-    color: "#4F46E5",
-    fontWeight: "600",
-  },
-  optionItem: {
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: "#F9FAFB",
-  },
-  darkOptionItem: {
-    borderBottomColor: "#1F2937",
-  },
-  selectedOption: {
-    backgroundColor: "#EEF2FF",
-  },
-  optionText: {
-    fontSize: 16,
-    color: "#374151",
-  },
-  selectedOptionText: {
-    color: "#4F46E5",
-    fontWeight: "bold",
-  },
-});

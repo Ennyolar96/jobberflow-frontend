@@ -252,12 +252,23 @@ export default function InterviewScreen() {
       <View
         style={[styles.sessionHeader, isDarkMode && styles.darkSessionHeader]}
       >
-        <View style={[styles.badge, isDarkMode && styles.darkBadge]}>
+        <View
+          style={[
+            styles.badge,
+            isDarkMode && styles.darkBadge,
+            { width: "50%" },
+          ]}
+        >
           <Briefcase size={12} color={isDarkMode ? "#818CF8" : "#4F46E5"} />
-          <Text style={[styles.badgeText, isDarkMode && styles.darkBadgeText]}>
+          <Text
+            style={[styles.badgeText, isDarkMode && styles.darkBadgeText]}
+            numberOfLines={1}
+            ellipsizeMode="tail"
+          >
             {role || "Developer"} @ {company || "Tech Corp"}
           </Text>
         </View>
+
         <View style={styles.headerActions}>
           <TouchableOpacity
             style={styles.headerButton}
@@ -462,7 +473,7 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
   },
   sendButtonDisabled: {
-    backgroundColor: "#E5E7EB",
+    backgroundColor: "#9ca3afc3",
     shadowOpacity: 0,
     elevation: 0,
   },
