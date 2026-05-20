@@ -1,6 +1,7 @@
 import { LoadingComponent } from "@/components/LoadingComponent";
 import { ResumeResult } from "@/components/resumeResult";
 import { RichEditors } from "@/components/richeditor";
+import { Select } from "@/components/ui/select";
 import { Screen } from "@/constants/layout";
 import { client } from "@/services";
 import { aiService } from "@/services/aiService";
@@ -26,9 +27,7 @@ import {
 } from "lucide-react-native";
 import React, { useState } from "react";
 import {
-  FlatList,
   Modal,
-  Pressable,
   ScrollView,
   Text,
   TextInput,
@@ -70,7 +69,7 @@ export default function ResumeScreen() {
   const [isDownloading, setIsDownloading] = useState(false);
   const [optimizedResume, setOptimizedResume] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [selectedTemplate, setSelectedTemplate] = useState<Template>(
+  const [selectedTemplate, setSelectedTemplate] = useState<string>(
     Template.modern,
   );
   const [isPickerVisible, setIsPickerVisible] = useState(false);
@@ -389,68 +388,15 @@ export default function ResumeScreen() {
           </TouchableOpacity>
         </View>
 
-        <Modal
+        <Select
+          data={Object.values(Template)}
+          selectedItem={selectedTemplate}
+          setSelectedItem={setSelectedTemplate}
           visible={isPickerVisible}
-          transparent
-          animationType="slide"
-          onRequestClose={() => setIsPickerVisible(false)}
-        >
-          <Pressable
-            style={styles.modalOverlay}
-            onPress={() => setIsPickerVisible(false)}
-          >
-            <View
-              style={[
-                styles.modalContent,
-                isDarkMode && styles.darkModalContent,
-              ]}
-            >
-              <View style={styles.modalHeader}>
-                <Text
-                  style={[styles.modalTitle, isDarkMode && styles.darkText]}
-                >
-                  Select Template
-                </Text>
-                <TouchableOpacity onPress={() => setIsPickerVisible(false)}>
-                  <Text style={styles.doneButton}>Done</Text>
-                </TouchableOpacity>
-              </View>
-              <FlatList
-                data={Object.values(Template)}
-                keyExtractor={(item) => item}
-                renderItem={({ item }) => (
-                  <TouchableOpacity
-                    style={[
-                      styles.optionItem,
-                      selectedTemplate === item && styles.selectedOption,
-                      isDarkMode && styles.darkOptionItem,
-                    ]}
-                    onPress={() => {
-                      setSelectedTemplate(item);
-                      setIsPickerVisible(false);
-                    }}
-                  >
-                    <Text
-                      style={[
-                        styles.optionText,
-                        isDarkMode && styles.darkText,
-                        selectedTemplate === item && styles.selectedOptionText,
-                      ]}
-                    >
-                      {item
-                        .split("_")
-                        .map(
-                          (word) =>
-                            word.charAt(0).toUpperCase() + word.slice(1),
-                        )
-                        .join(" ")}
-                    </Text>
-                  </TouchableOpacity>
-                )}
-              />
-            </View>
-          </Pressable>
-        </Modal>
+          setVisible={setIsPickerVisible}
+          isDarkMode={isDarkMode}
+          placeholder="Select Template"
+        />
 
         <View style={styles.buttonRow}>
           <TouchableOpacity
