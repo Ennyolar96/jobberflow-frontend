@@ -1,6 +1,7 @@
 import { styles } from "@/style/resume";
 import { CheckCircle2 } from "lucide-react-native";
 import {
+  ScrollView,
   Text,
   TouchableOpacity,
   useWindowDimensions,
@@ -48,15 +49,21 @@ export const ResumeResult = ({
           marginBottom: 16,
         }}
       >
-        <RenderHtml
-          source={{ html: optimizedResume }}
-          contentWidth={width}
-          tagsStyles={{
-            body: {
-              color: isDarkMode ? "#FFFFFF" : "#000000",
-            },
-          }}
-        />
+        <ScrollView
+          nestedScrollEnabled={true}
+          style={{ flex: 1, padding: 10 }}
+          showsVerticalScrollIndicator={false}
+        >
+          <RenderHtml
+            source={{ html: optimizedResume }}
+            contentWidth={width}
+            tagsStyles={{
+              body: {
+                color: isDarkMode ? "#FFFFFF" : "#000000",
+              },
+            }}
+          />
+        </ScrollView>
       </View>
 
       <View style={styles.resultActions}>
