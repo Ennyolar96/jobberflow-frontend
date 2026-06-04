@@ -298,6 +298,7 @@ export default function ResumeScreen() {
         style={[styles.container, isDarkMode && styles.darkContainer]}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
+        showsHorizontalScrollIndicator={false}
       >
         <View style={styles.header}>
           <Sparkles size={24} color={isDarkMode ? "#818CF8" : "#6366F1"} />

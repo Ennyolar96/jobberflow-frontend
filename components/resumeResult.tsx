@@ -66,9 +66,14 @@ export const ResumeResult = ({
         </ScrollView>
       </View>
 
-      <View style={styles.resultActions}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.resultActionsScroll}
+        contentContainerStyle={styles.resultActions}
+      >
         <TouchableOpacity
-          style={styles.secondaryButton}
+          style={[styles.secondaryButton, isDarkMode && styles.darkSecondaryButton]}
           onPress={toggleEdit}
           activeOpacity={0.6}
         >
@@ -83,7 +88,7 @@ export const ResumeResult = ({
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={styles.secondaryButton}
+          style={[styles.secondaryButton, isDarkMode && styles.darkSecondaryButton]}
           onPress={() => setShowWebView(!showWebView)}
           activeOpacity={0.6}
         >
@@ -97,7 +102,7 @@ export const ResumeResult = ({
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={styles.secondaryButton}
+          style={[styles.secondaryButton, isDarkMode && styles.darkSecondaryButton]}
           onPress={copyResume}
           activeOpacity={0.6}
         >
@@ -123,7 +128,7 @@ export const ResumeResult = ({
             {isDownloading ? "Downloading..." : "Download (PDF)"}
           </Text>
         </TouchableOpacity>
-      </View>
+      </ScrollView>
     </View>
   );
 };

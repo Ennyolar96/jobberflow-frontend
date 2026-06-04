@@ -10,14 +10,23 @@ import { AxiosError } from "axios";
 import { useRouter } from "expo-router";
 import {
   Briefcase,
+  Menu,
   Mic,
   MicOff,
+  Sliders,
   Volume2,
   VolumeX,
+  X,
   Zap,
 } from "lucide-react-native";
 import React, { useEffect, useRef, useState } from "react";
-import { FlatList, Text, TouchableOpacity, View } from "react-native";
+import {
+  FlatList,
+  Pressable,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 interface Message {
   id: string;
@@ -41,6 +50,7 @@ export default function InterviewScreen() {
   const [isListening, setIsListening] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isAutoRead, setIsAutoRead] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "1",
@@ -227,36 +237,121 @@ export default function InterviewScreen() {
   return (
     <Screen edges={["top", "left", "right"]}>
       <View
-        style={[styles.sessionHeader, isDarkMode && styles.darkSessionHeader]}
+        style={[
+          styles.sessionHeader,
+          isDarkMode && styles.darkSessionHeader,
+          {
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+          },
+        ]}
       >
-        <View style={[styles.badge, isDarkMode && styles.darkBadge]}>
+        <View
+          style={[
+            styles.badge,
+            isDarkMode && styles.darkBadge,
+            { width: "70%" },
+          ]}
+        >
           <Briefcase size={12} color={isDarkMode ? "#818CF8" : "#4F46E5"} />
-          <Text style={[styles.badgeText, isDarkMode && styles.darkBadgeText]}>
+          <Text
+            style={[styles.badgeText, isDarkMode && styles.darkBadgeText]}
+            numberOfLines={1}
+            ellipsizeMode="tail"
+          >
             {role || "Developer"} @ {company || "Tech Corp"}
           </Text>
         </View>
-        <View style={styles.headerActions}>
-          <TouchableOpacity
-            style={styles.headerButton}
-            onPress={() => setIsAutoRead(!isAutoRead)}
+
+        <Pressable
+          style={styles.menuToggle}
+          onPress={() => setIsMenuOpen(!isMenuOpen)}
+        >
+          <Menu size={24} color={isDarkMode ? "#818CF8" : "#4F46E5"} />
+        </Pressable>
+
+        {isMenuOpen && (
+          <View
+            style={[styles.dropdownMenu, isDarkMode && styles.darkDropdownMenu]}
           >
-            {isAutoRead ? (
-              <Volume2 size={20} color={isDarkMode ? "#818CF8" : "#4F46E5"} />
-            ) : (
-              <VolumeX size={20} color={isDarkMode ? "#9CA3AF" : "#6B7280"} />
-            )}
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.setupButton}
-            onPress={() => router.push("/dashboard/resume")}
-          >
-            <Text
-              style={[styles.setupButtonText, isDarkMode && styles.darkSubtext]}
+            <View
+              style={[
+                styles.dropdownHeader,
+                isDarkMode && styles.darkDropdownHeader,
+              ]}
             >
-              Setup Session
-            </Text>
-          </TouchableOpacity>
-        </View>
+              <Text
+                style={[
+                  styles.dropdownTitle,
+                  isDarkMode && styles.darkDropdownTitle,
+                ]}
+              >
+                Actions
+              </Text>
+              <Pressable
+                style={styles.dropdownClose}
+                onPress={() => setIsMenuOpen(false)}
+              >
+                <X size={16} color={isDarkMode ? "#9CA3AF" : "#6B7280"} />
+              </Pressable>
+            </View>
+
+            <TouchableOpacity
+              style={styles.dropdownItem}
+              onPress={() => {
+                setIsMenuOpen(false);
+                router.push("/dashboard/resume");
+              }}
+            >
+              <Sliders size={18} color={isDarkMode ? "#818CF8" : "#4F46E5"} />
+              <Text
+                style={[
+                  styles.dropdownItemText,
+                  isDarkMode && styles.darkDropdownItemText,
+                ]}
+              >
+                Setup Session
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.dropdownItem}
+              onPress={() => {
+                setIsAutoRead(!isAutoRead);
+              }}
+            >
+              {isAutoRead ? (
+                <Volume2 size={18} color={isDarkMode ? "#818CF8" : "#4F46E5"} />
+              ) : (
+                <VolumeX size={18} color={isDarkMode ? "#9CA3AF" : "#6B7280"} />
+              )}
+              <Text
+                style={[
+                  styles.dropdownItemText,
+                  isDarkMode && styles.darkDropdownItemText,
+                ]}
+              >
+                Auto-Read
+              </Text>
+              <View style={{ marginLeft: "auto" }}>
+                <Text
+                  style={[
+                    isAutoRead
+                      ? styles.dropdownItemStatus
+                      : styles.dropdownItemStatusDisabled,
+                    isDarkMode &&
+                      (isAutoRead
+                        ? styles.darkDropdownItemStatus
+                        : styles.darkDropdownItemStatusDisabled),
+                  ]}
+                >
+                  {isAutoRead ? "ON" : "OFF"}
+                </Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
 
       <FlatList
@@ -264,6 +359,8 @@ export default function InterviewScreen() {
         data={messages}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContent}
+        showsVerticalScrollIndicator={false}
+        showsHorizontalScrollIndicator={false}
         onContentSizeChange={() =>
           flatListRef.current?.scrollToEnd({ animated: true })
         }

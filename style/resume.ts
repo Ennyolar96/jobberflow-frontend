@@ -177,15 +177,26 @@ export const styles = StyleSheet.create({
     lineHeight: 20,
     marginBottom: 16,
   },
+  resultActionsScroll: {
+    width: "100%",
+  },
   resultActions: {
     flexDirection: "row",
-    justifyContent: "flex-end",
-    overflowX: "auto",
-    gap: 12,
+    gap: 10,
+    alignItems: "center",
+    paddingVertical: 4,
   },
   secondaryButton: {
+    // backgroundColor: "#F3F4F6",
     paddingVertical: 8,
-    paddingHorizontal: 12,
+    paddingHorizontal: 14,
+    // borderRadius: 8,
+    // borderWidth: 1,
+    // borderColor: "#E5E7EB",
+  },
+  darkSecondaryButton: {
+    // backgroundColor: "#1F2937",
+    // borderColor: "#374151",
   },
   secondaryButtonText: {
     color: "#4B5563",
