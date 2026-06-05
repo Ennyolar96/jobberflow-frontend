@@ -275,12 +275,16 @@ export default function InterviewScreen() {
           style={[
             styles.badge,
             isDarkMode && styles.darkBadge,
-            { width: "70%" },
+            { flexShrink: 1, minWidth: 0, maxWidth: "80%", marginRight: 8 },
           ]}
         >
           <Briefcase size={12} color={isDarkMode ? "#818CF8" : "#4F46E5"} />
           <Text
-            style={[styles.badgeText, isDarkMode && styles.darkBadgeText]}
+            style={[
+              styles.badgeText,
+              isDarkMode && styles.darkBadgeText,
+              { flexShrink: 1 },
+            ]}
             numberOfLines={1}
             ellipsizeMode="tail"
           >

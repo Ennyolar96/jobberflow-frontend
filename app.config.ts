@@ -6,7 +6,7 @@ const getAppEnvironment = (): string => {
   const bundleIdentifier: Record<AppEnvironment, string> = {
     preview: "com.jobberflow.preview",
     development: "com.jobberflow.dev",
-    production: "com.jobberflow",
+    production: "production.jobberflow.com",
   };
   return bundleIdentifier[env || "development"];
 };
@@ -15,7 +15,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: "JobberFlow",
   slug: "JobberFlow",
-  version: "1.0.0",
+  version: "1.0.13",
   orientation: "portrait",
   icon: "./assets/images/icon.png",
   scheme: "JobberFlow",
