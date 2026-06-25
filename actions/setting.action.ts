@@ -25,6 +25,7 @@ export const settingsAction = {
   saveKeys: async (
     openai: string,
     gemini: string,
+    deepgram: string,
     userId: string | null,
     password: string,
   ) => {
@@ -34,6 +35,7 @@ export const settingsAction = {
         {
           openai,
           gemini,
+          deepgram,
           userId,
           password,
         },

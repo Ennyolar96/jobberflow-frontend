@@ -45,6 +45,7 @@ export default function SettingsScreen() {
 
   const [tempOpenAI, setTempOpenAI] = useState("");
   const [tempGemini, setTempGemini] = useState("");
+  const [tempDeepgram, setTempDeepgram] = useState("");
   const [isPromptVisible, setIsPromptVisible] = useState(false);
   const [promptMode, setPromptMode] = useState<"view" | "save">("view");
   const [isPasswordSet, setIsPasswordSet] = useState(false);
@@ -52,11 +53,13 @@ export default function SettingsScreen() {
   const [keys, setKeys] = useState<{
     openai: string;
     gemini: string;
+    deepgram: string;
   } | null>(null);
 
   const maskKeys = useCallback(async () => {
     if (isPasswordSet) setTempOpenAI("********************************");
     if (isPasswordSet) setTempGemini("********************************");
+    if (isPasswordSet) setTempDeepgram("********************************");
   }, [isPasswordSet]);
 
   useEffect(() => {
@@ -66,7 +69,7 @@ export default function SettingsScreen() {
   useEffect(() => {
     const checkKeys = async () => {
       const keys = await sa.getKeys(userId);
-      if (keys && keys.openai && keys.gemini) {
+      if (keys && keys.openai && keys.gemini && keys.deepgram) {
         setIsPasswordSet(true);
         setKeys(keys);
       }
@@ -87,8 +90,18 @@ export default function SettingsScreen() {
     setIsPending(true);
     try {
       if (promptMode === "save") {
-        await sa.saveKeys(tempOpenAI, tempGemini, userId, password);
-        setKeys({ openai: tempOpenAI, gemini: tempGemini });
+        await sa.saveKeys(
+          tempOpenAI,
+          tempGemini,
+          tempDeepgram,
+          userId,
+          password,
+        );
+        setKeys({
+          openai: tempOpenAI,
+          gemini: tempGemini,
+          deepgram: tempDeepgram,
+        });
         setIsPasswordSet(true);
         showAlert("API Keys encrypted and saved successfully.", "success");
       } else {
@@ -96,6 +109,7 @@ export default function SettingsScreen() {
         if (valid) {
           setTempOpenAI(keys?.openai || "");
           setTempGemini(keys?.gemini || "");
+          setTempDeepgram(keys?.deepgram || "");
           showAlert("Keys decrypted for viewing.", "info");
         } else {
           showAlert("Invalid password. Decryption failed.", "error");
@@ -378,6 +392,36 @@ export default function SettingsScreen() {
                   placeholderTextColor={isDarkMode ? "#4B5563" : "#9CA3AF"}
                   onChangeText={setTempGemini}
                   secureTextEntry={tempGemini.includes("*")}
+                />
+              </View>
+            </View>
+
+            <View
+              style={[
+                styles.inputGroup,
+                styles.borderTop,
+                isDarkMode && styles.darkBorder,
+              ]}
+            >
+              <View style={styles.iconWrapper}>
+                <ShieldCheck
+                  size={18}
+                  color={isDarkMode ? "#9CA3AF" : "#6B7280"}
+                />
+              </View>
+              <View style={styles.inputWrapper}>
+                <Text
+                  style={[styles.inputLabel, isDarkMode && styles.darkSubtext]}
+                >
+                  Deepgram API Key
+                </Text>
+                <TextInput
+                  style={[styles.input, isDarkMode && styles.darkText]}
+                  value={tempDeepgram}
+                  placeholder="......."
+                  placeholderTextColor={isDarkMode ? "#4B5563" : "#9CA3AF"}
+                  onChangeText={setTempDeepgram}
+                  secureTextEntry={tempDeepgram.includes("*")}
                 />
               </View>
             </View>
